@@ -1,17 +1,16 @@
 #include "queue.h"
 
-void queueCreate(PcbPtr head){
+PcbPtr queueCreate(PcbPtr head){
+	PcbPtr queueHead = NULL;
 	if(head != NULL){
 		queueHead = head;
+		filled = 1;
 	}
-	else{
-		return;
-	}
-	filled = 1;
+	return queueHead;
 }
 
 //Return 1 if success, -1 on error
-int enqueue(PcbPtr newPcb){
+int enqueue(PcbPtr queueHead, PcbPtr newPcb){
 	//New entered Pcb's should have a next pointer which is = NULL
 	if(newPcb != NULL){
 		//Loop through linked list until last element then add newPcb to the end
@@ -24,22 +23,21 @@ int enqueue(PcbPtr newPcb){
 		filled++;
 	}
 	else{
-		return NULL;
+		return -1;
 	}
+	return 1;
 }
 
 //Pop off the first element in FCFS manner
-PcbPtr dequeue(){
+PcbPtr dequeue(PcbPtr queueHead){
+	if(filled == 0){
+		return NULL;
+	}
 	PcbPtr tmp = queueHead;
+	//TODO: free the dequeued element?
 	queueHead = tmp->next;
 	filled--;
 	return tmp;
-}
-
-//Look at the top element in FCFS manner
-PcbPtr peek(){
-	PcbPtr ret = queueHead;
-	return ret;
 }
 
 //Return number of Pcbs in the queue

@@ -18,19 +18,14 @@ typedef Pcb * PcbPtr;
 
 int filled;
 
-Pcb* queueHead;
-
-//Create the queue with size queueSize
-void queueCreate(PcbPtr head);
+//Create the queue with size queueSize, return the head of the queue
+PcbPtr queueCreate(PcbPtr head);
 
 //Return 1 if success, -1 on error
-int enqueue(PcbPtr newPcb);
+int enqueue(PcbPtr queueHead, PcbPtr newPcb);
 
 //Pop off the first element in FCFS manner
-PcbPtr dequeue();
+PcbPtr dequeue(PcbPtr queueHead);
 
-//Look at the top element in FCFS manner
-PcbPtr peek();
-
-//Return number of Pcbs in the queue
+//Return number of Pcbs in the queue, TODO: CHANGE FILLED, will have different filled for each queue
 int getFilled();
