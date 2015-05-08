@@ -96,6 +96,7 @@ int main (int argc, char *argv[]) {
           &(process->req.modems), &(process->req.cds))) == 8) {
             process->status = PCB_INITIALIZED;
             inputqueue = enqPcb(inputqueue, process);
+
         }
         else if (val_check >= 0){
             free(process);
@@ -112,18 +113,17 @@ int main (int argc, char *argv[]) {
             break;
         }
     }
-
 //  3. Start dispatcher timer;
 //     (already set to zero above)
         
 //  4. While there's anything in the queue or there is a currently running process:
 
-    while (	inputqueue != NULL || currentprocess->status == PCB_RUNNING ) {
+    while (	inputqueue != NULL || currentprocess != NULL ) {
 
 //      i. If a process is currently running;
 
-        if ( currentprocess->status == PCB_RUNNING ) {
-
+        if (currentprocess != NULL && currentprocess->status == PCB_RUNNING) {
+        	printf("decrement!\n");
 //          a. Decrement process remainingcputime;
 			currentprocess->remainingcputime = currentprocess->remainingcputime - QUANTUM;
 
@@ -134,7 +134,6 @@ int main (int argc, char *argv[]) {
             if ( currentprocess->remainingcputime == 0 ) {
                 
 //             A. Send SIGINT to the process to terminate it;
-
                 terminatePcb(currentprocess);
                 
 //             B. Free up process structure memory
@@ -147,15 +146,13 @@ int main (int argc, char *argv[]) {
 //     ii. If no process now currently running &&
 //           dispatcher queue is not empty &&
 //           arrivaltime of process at head of queue is <= dispatcher timer:
-
-        if ( currentprocess->status != PCB_RUNNING && inputqueue != NULL && inputqueue->arrivaltime <= timer ) {
+        if ( currentprocess == NULL && inputqueue != NULL && inputqueue->arrivaltime <= timer ) {
 
 //          a. Dequeue process and start it (fork & exec)
 //          b. Set it as currently running process;
-            PcbPtr deq = deqPcb(inputqueue);
-            currentprocess = startPcb(deq);
+        	// printf("%s", newProcess->pid);
+            currentprocess = startPcb(deqPcb(&inputqueue));
         }
-
 //     iii. sleep for one second;
 
         sleep(1);

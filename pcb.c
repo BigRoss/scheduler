@@ -62,9 +62,9 @@
  *    PcbPtr of process
  *    NULL if start (restart) failed
  ******************************************************/
-PcbPtr startPcb (PcbPtr p) { 
+PcbPtr startPcb (PcbPtr p) {
     if (p->pid == 0) {                 // not yet started
-        switch (p->pid = fork ()) {    //  so start it
+        switch (p->pid = fork()) {    //  so start it
             case -1: 
                 perror ("startPcb");
                 exit(1); 
@@ -95,7 +95,7 @@ PcbPtr startPcb (PcbPtr p) {
  *    NULL if suspend failed
  ******************************************************/
  PcbPtr suspendPcb(PcbPtr p) {
-    if(kill(p->pid, SIGSTOP) == -1){
+  if(kill(p->pid, SIGSTOP) == -1){
 		return NULL;
 	}
 	p->status = PCB_SUSPENDED;
@@ -110,7 +110,7 @@ PcbPtr startPcb (PcbPtr p) {
  *    NULL if terminate failed
  ******************************************************/
 PcbPtr terminatePcb(PcbPtr p) {
-    if(kill(p->pid, SIGKILL) == -1){
+  if(kill(p->pid, SIGKILL) == -1){
 		return NULL;
 	}
 	p->status = PCB_TERMINATED;
@@ -204,7 +204,7 @@ PcbPtr enqPcb(PcbPtr q, PcbPtr p) {
  *******************************************************/
 PcbPtr deqPcb(PcbPtr * hPtr) {
     PcbPtr p;
-     
+
     if (hPtr && (p = * hPtr)) {
         * hPtr = p->next;
         return p;
