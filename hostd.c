@@ -69,6 +69,7 @@ int main (int argc, char *argv[]) {
     PcbPtr inputqueue = NULL;     // input queue buffer
     PcbPtr currentprocess = NULL; // current process
     PcbPtr process = NULL;        // working pcb pointer
+    PcbPtr rrQueue = NULL;
     int timer = 0;                // dispatcher timer 
 
 //  0. Parse command line
@@ -115,57 +116,65 @@ int main (int argc, char *argv[]) {
     }
 //  3. Start dispatcher timer;
 //     (already set to zero above)
-        
-//  4. While there's anything in the queue or there is a currently running process:
+    
 
-    while (	inputqueue != NULL || currentprocess != NULL ) {
-
-//      i. If a process is currently running;
-
-        if (currentprocess != NULL && currentprocess->status == PCB_RUNNING) {
-        	printf("decrement!\n");
-//          a. Decrement process remainingcputime;
-			currentprocess->remainingcputime = currentprocess->remainingcputime - QUANTUM;
-
-            /* FILL IN THIS LINE WITH YOUR CODE */
-            
-//          b. If times up:
-
-            if ( currentprocess->remainingcputime == 0 ) {
-                
-//             A. Send SIGINT to the process to terminate it;
+// 4.     While there's anything in any of the queues or there is a currently running process:
+    while(inputqueue != NULL || rrQueue != NULL || currentprocess != NULL){
+        printf("Timer: %d\n", timer);
+        //i.Unload any pending processes from the input queue: While (head-of-input-queue.arrival-time <= dispatcher timer)
+        // dequeue process from input queue and enqueue on RR queue;
+        while(inputqueue->arrivaltime <= timer){
+            rrQueue = enqPcb(rrQueue, deqPcb(&inputqueue));
+        }    
+        // ii.If a process is currently running:
+        if(currentprocess != NULL){
+            printf("Decrement time of process: %d\n", currentprocess->pid);
+            // a. Decrement process remainingcputime;
+            currentprocess->remainingcputime = currentprocess->remainingcputime - QUANTUM;
+            // b. If times up:
+            if(currentprocess->remainingcputime == 0){
+                printf("Terminate\n");
+                //A. Send SIGINT to the process to terminate it;
                 terminatePcb(currentprocess);
-                
-//             B. Free up process structure memory
-
+                //B. Free up process structure memory
                 free(currentprocess);
                 currentprocess = NULL;
             }
+            else if(rrQueue != NULL){
+                // c. else if other processes are waiting in RR queue:
+                printf("Suspend and Enq to rrQueue\n");
+                // A.Send SIGTSTP to suspend it;
+                suspendPcb(currentprocess);
+                // B.Enqueue it back on RR queue;    
+                rrQueue = enqPcb(rrQueue, currentprocess);
+                
+                currentprocess = NULL;
+            }
         }
-        
-//     ii. If no process now currently running &&
-//           dispatcher queue is not empty &&
-//           arrivaltime of process at head of queue is <= dispatcher timer:
-        if ( currentprocess == NULL && inputqueue != NULL && inputqueue->arrivaltime <= timer ) {
-
-//          a. Dequeue process and start it (fork & exec)
-//          b. Set it as currently running process;
-        	// printf("%s", newProcess->pid);
-            currentprocess = startPcb(deqPcb(&inputqueue));
+            
+        // iii. If no process currently running && RR queue is not empty:
+        if(currentprocess == NULL && rrQueue != NULL){
+            printf("dequeue and start from rrQueue\n");
+            // a. Dequeue process from RR queue
+            PcbPtr newProcess = deqPcb(&rrQueue);
+            // b. If already started but suspended, restart it (send SIGCONT to it)
+            // else start it (fork & exec)
+            startPcb(newProcess);
+            // c. Set it as currently running process;
+            currentprocess = newProcess;
         }
-//     iii. sleep for one second;
-
+            
+        //     iii. sleep for one second;
         sleep(1);
             
 //      iv. Increment dispatcher timer;
 
         timer = timer + QUANTUM;
             
-//       v. Go back to 4.
-
+//       v. Go back to 4.                                        
     }
-        
-//    5. Exit
+    
+// 5.     Exit.
 
     exit (0);
 }    

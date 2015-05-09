@@ -72,7 +72,8 @@ PcbPtr startPcb (PcbPtr p) {
                 p->pid = getpid();
                 p->status = PCB_RUNNING;
                 printPcbHdr(stdout);            // printout in child to
-                printPcb(p, stdout);            //  sync with o/p
+                // printPcb(p, stdout);            //  sync with o/p
+                printf("started process: %d", p->pid);
                 fflush(stdout);
                 execvp (p->args[0], p->args); 
                 perror (p->args[0]);
@@ -130,8 +131,8 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
 			fprintf(iostream, "Args[%d]: %s\n", i, p->args[i]);
 		}
 	}
-	fprintf(iostream, "Arrival time: %d\n Priority: %d\n Remaining CPU Time: %d\n Megabytes: %d\n", p->arrivaltime, p->priority, p->remainingcputime, p->mbytes);
-	fprintf(iostream, "Req Printer: %d\n Req Scanner: %d\n Req MOdems: %d\n Req CD's: %d\n", p->req.printers, p->req.scanners, p->req.modems, p->req.cds);
+	fprintf(iostream, "Arrival time: %d\nPriority: %d\nRemaining CPU Time: %d\nMegabytes: %d\n", p->arrivaltime, p->priority, p->remainingcputime, p->mbytes);
+	fprintf(iostream, "Req Printer: %d\nReq Scanner: %d\nReq MOdems: %d\nReq CD's: %d\n", p->req.printers, p->req.scanners, p->req.modems, p->req.cds);
 	fprintf(iostream, "Status: %d\n", p->status);
     return p;
 }
@@ -142,7 +143,7 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
  *    void
  ******************************************************/  
 void printPcbHdr(FILE * iostream) {  
-    fprintf(iostream, "printPcbHdr\n");
+    // fprintf(iostream, "printPcbHdr\n");
 }
        
 /*******************************************************
@@ -187,7 +188,9 @@ PcbPtr enqPcb(PcbPtr q, PcbPtr p) {
     
     p->next = NULL; 
     if (q) {
-        while (q->next) q = q->next;
+        while (q->next){
+          q = q->next;
+        } 
         q->next = p;
         return h;
     }
@@ -204,7 +207,6 @@ PcbPtr enqPcb(PcbPtr q, PcbPtr p) {
  *******************************************************/
 PcbPtr deqPcb(PcbPtr * hPtr) {
     PcbPtr p;
-
     if (hPtr && (p = * hPtr)) {
         * hPtr = p->next;
         return p;
