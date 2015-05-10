@@ -123,17 +123,22 @@ int main (int argc, char *argv[]) {
         printf("Timer: %d\n", timer);
         //i.Unload any pending processes from the input queue: While (head-of-input-queue.arrival-time <= dispatcher timer)
         // dequeue process from input queue and enqueue on RR queue;
-        while(inputqueue->arrivaltime <= timer){
-            rrQueue = enqPcb(rrQueue, deqPcb(&inputqueue));
-        }    
+        
+    	while(inputqueue!= NULL && inputqueue->arrivaltime <= timer){
+        	printf("Load processes from inputqueue\n");
+        	PcbPtr putOnRR = deqPcb(&inputqueue);
+            rrQueue = enqPcb(rrQueue, putOnRR);
+        }  
+          
         // ii.If a process is currently running:
         if(currentprocess != NULL){
             printf("Decrement time of process: %d\n", currentprocess->pid);
             // a. Decrement process remainingcputime;
             currentprocess->remainingcputime = currentprocess->remainingcputime - QUANTUM;
+
             // b. If times up:
             if(currentprocess->remainingcputime == 0){
-                printf("Terminate\n");
+                printf("terminate currentprocess as time == 0\n");
                 //A. Send SIGINT to the process to terminate it;
                 terminatePcb(currentprocess);
                 //B. Free up process structure memory
@@ -142,28 +147,26 @@ int main (int argc, char *argv[]) {
             }
             else if(rrQueue != NULL){
                 // c. else if other processes are waiting in RR queue:
-                printf("Suspend and Enq to rrQueue\n");
+                printf("Suspend and enqueue to rrQueue\n");
                 // A.Send SIGTSTP to suspend it;
-                suspendPcb(currentprocess);
+                currentprocess = suspendPcb(currentprocess);
                 // B.Enqueue it back on RR queue;    
                 rrQueue = enqPcb(rrQueue, currentprocess);
                 
                 currentprocess = NULL;
             }
         }
-            
+    	
         // iii. If no process currently running && RR queue is not empty:
         if(currentprocess == NULL && rrQueue != NULL){
             printf("dequeue and start from rrQueue\n");
             // a. Dequeue process from RR queue
-            PcbPtr newProcess = deqPcb(&rrQueue);
+            PcbPtr newProcess = startPcb(deqPcb(&rrQueue));
             // b. If already started but suspended, restart it (send SIGCONT to it)
             // else start it (fork & exec)
-            startPcb(newProcess);
             // c. Set it as currently running process;
             currentprocess = newProcess;
-        }
-            
+        }  
         //     iii. sleep for one second;
         sleep(1);
             

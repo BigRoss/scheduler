@@ -62,9 +62,9 @@
  *    PcbPtr of process
  *    NULL if start (restart) failed
  ******************************************************/
-PcbPtr startPcb (PcbPtr p) {
+PcbPtr startPcb (PcbPtr p) { 
     if (p->pid == 0) {                 // not yet started
-        switch (p->pid = fork()) {    //  so start it
+        switch (p->pid = fork ()) {    //  so start it
             case -1: 
                 perror ("startPcb");
                 exit(1); 
@@ -72,8 +72,7 @@ PcbPtr startPcb (PcbPtr p) {
                 p->pid = getpid();
                 p->status = PCB_RUNNING;
                 printPcbHdr(stdout);            // printout in child to
-                // printPcb(p, stdout);            //  sync with o/p
-                printf("started process: %d", p->pid);
+                printPcb(p, stdout);            //  sync with o/p
                 fflush(stdout);
                 execvp (p->args[0], p->args); 
                 perror (p->args[0]);
@@ -88,15 +87,16 @@ PcbPtr startPcb (PcbPtr p) {
     return p; 
 } 
 
+
+
 /*******************************************************
- * PcbPtr suspendPcb(PcbPtr process) - suspend
- *    a process
+ * PcbPtr suspendPcb(PcbPtr process) - suspend a process
  * returns:
  *    PcbPtr of process
  *    NULL if suspend failed
  ******************************************************/
  PcbPtr suspendPcb(PcbPtr p) {
-  if(kill(p->pid, SIGSTOP) == -1){
+  if(kill(p->pid, SIGTSTP) == -1){
 		return NULL;
 	}
 	p->status = PCB_SUSPENDED;
@@ -111,7 +111,7 @@ PcbPtr startPcb (PcbPtr p) {
  *    NULL if terminate failed
  ******************************************************/
 PcbPtr terminatePcb(PcbPtr p) {
-  if(kill(p->pid, SIGKILL) == -1){
+  if(kill(p->pid, SIGINT) == -1){
 		return NULL;
 	}
 	p->status = PCB_TERMINATED;
@@ -185,7 +185,6 @@ PcbPtr createnullPcb() {
  ******************************************************/
 PcbPtr enqPcb(PcbPtr q, PcbPtr p) {
     PcbPtr h = q;
-    
     p->next = NULL; 
     if (q) {
         while (q->next){
