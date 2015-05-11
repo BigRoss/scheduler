@@ -72,7 +72,7 @@ PcbPtr startPcb (PcbPtr p) {
                 p->pid = getpid();
                 p->status = PCB_RUNNING;
                 printPcbHdr(stdout);            // printout in child to
-                printPcb(p, stdout);            //  sync with o/p
+                //printPcb(p, stdout);            //  sync with o/p
                 fflush(stdout);
                 execvp (p->args[0], p->args); 
                 perror (p->args[0]);
@@ -100,6 +100,7 @@ PcbPtr startPcb (PcbPtr p) {
 		return NULL;
 	}
 	p->status = PCB_SUSPENDED;
+	waitpid(p->pid, NULL, WUNTRACED);
     return p;
 }
  
@@ -115,6 +116,7 @@ PcbPtr terminatePcb(PcbPtr p) {
 		return NULL;
 	}
 	p->status = PCB_TERMINATED;
+	waitpid(p->pid, NULL, WUNTRACED);
     return p;
 }  
 
