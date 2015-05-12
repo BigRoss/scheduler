@@ -69,7 +69,10 @@ int main (int argc, char *argv[]) {
     PcbPtr inputqueue = NULL;     // input queue buffer
     PcbPtr currentprocess = NULL; // current process
     PcbPtr process = NULL;        // working pcb pointer
-    PcbPtr rrQueue = NULL;
+    PcbPtr rrQueue = NULL;		  // Round robin queue
+    PcbPtr fbQueue1 = NULL;       // Highest priority feedback queue
+    PcbPtr fbQueue2 = NULL;		  // Middle priority 
+    PcbPtr fbQueue3 = NULL;		  // Lowest priority fbQueue
     int timer = 0;                // dispatcher timer 
 
 //  0. Parse command line
@@ -119,14 +122,14 @@ int main (int argc, char *argv[]) {
     
 
 // 4.     While there's anything in any of the queues or there is a currently running process:
-    while(inputqueue != NULL || rrQueue != NULL || currentprocess != NULL){
+    while(inputqueue != NULL || rrQueue != NULL || currentprocess != NULL || fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL){
         //printf("Timer: %d\n", timer);
-        //i.Unload any pending processes from the input queue: While (head-of-input-queue.arrival-time <= dispatcher timer)
-        // dequeue process from input queue and enqueue on RR queue;
+        //i.Unload pending processes from the input queue: While (head-of-input-queue.arrival-time <= dispatcher timer)
         
     	while(inputqueue!= NULL && inputqueue->arrivaltime <= timer){
-        	//printf("Load processes from inputqueue\n");
-            rrQueue = enqPcb(rrQueue, deqPcb(&inputqueue));
+        	//dequeue process from input queue and enqueue on highest priority feedback queue (assigning it the appropriate priority);
+        	inputqueue->priority = 1;
+            fbQueue1 = enqPcb(fbQueue1, deqPcb(&inputqueue));
         }  
           
         // ii.If a process is currently running:
@@ -140,30 +143,50 @@ int main (int argc, char *argv[]) {
                 //printf("terminate currentprocess as time == 0\n");
                 //A. Send SIGINT to the process to terminate it;
                 terminatePcb(currentprocess);
-				
                 //B. Free up process structure memory
                 free(currentprocess);
                 currentprocess = NULL;
             }
-            else if(rrQueue != NULL){
-                // c. else if other processes are waiting in RR queue:
-                //printf("Suspend and enqueue to rrQueue\n");
-                // A.Send SIGTSTP to suspend it;
-                // B.Enqueue it back on RR queue;    
+            //c.    else if other processes are waiting in any of the feedback queues:
+            else if(fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL){
+				//A.    Send SIGTSTP to suspend it;
 				currentprocess = suspendPcb(currentprocess);
-                rrQueue = enqPcb(rrQueue, currentprocess);
+
+				//B.    Reduce the priority of the process (if possible) and enqueue it on the appropriate feedback queue
+				if(currentprocess->priority == 1){
+					currentprocess->priority++;
+					fbQueue2 = enqPcb(fbQueue2, currentprocess);
+				}
+				else if(currentprocess->priority == 2){
+					currentprocess->priority++;
+					fbQueue3 = enqPcb(fbQueue3, currentprocess);
+				}
+				else{
+					fbQueue3 = enqPcb(fbQueue3, currentprocess);
+				}
+                
                 currentprocess = NULL;
             }
         }
     	
         // iii. If no process currently running && RR queue is not empty:
-        if(currentprocess == NULL && rrQueue != NULL){
+        if(currentprocess == NULL && (fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL)){
             //printf("dequeue and start from rrQueue\n");
-            // a. Dequeue process from RR queue
-            // b. If already started but suspended, restart it (send SIGCONT to it)
-            // else start it (fork & exec)
-            // c. Set it as currently running process;
-            currentprocess = startPcb(deqPcb(&rrQueue));
+        	PcbPtr newPcb = NULL;
+            //Dequeue a process from the highest priority feedback queue that is not empty
+            if(fbQueue1 != NULL){
+            	printf("Starting from queue1\n");
+            	newPcb = deqPcb(&fbQueue1);
+            }
+            else if(fbQueue2 != NULL){
+            	printf("Starting from queue2\n");
+            	newPcb = deqPcb(&fbQueue2);
+            }
+            else if(fbQueue3 != NULL){
+            	printf("Starting from queue3\n");
+            	newPcb = deqPcb(&fbQueue3);
+            }
+            currentprocess = startPcb(newPcb);
         }  
         //     iii. sleep for one second;
         sleep(1);
