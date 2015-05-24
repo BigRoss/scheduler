@@ -72,7 +72,7 @@ PcbPtr startPcb (PcbPtr p) {
                 p->pid = getpid();
                 p->status = PCB_RUNNING;
                 printPcbHdr(stdout);            // printout in child to
-                //printPcb(p, stdout);            //  sync with o/p
+                // printPcb(p, stdout);            //  sync with o/p
                 fflush(stdout);
                 execvp (p->args[0], p->args); 
                 perror (p->args[0]);
@@ -136,7 +136,7 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
 	fprintf(iostream, "Arrival time: %d\nPriority: %d\nRemaining CPU Time: %d\nMegabytes: %d\n", p->arrivaltime, p->priority, p->remainingcputime, p->mbytes);
 	fprintf(iostream, "Req Printer: %d\nReq Scanner: %d\nReq MOdems: %d\nReq CD's: %d\n", p->req.printers, p->req.scanners, p->req.modems, p->req.cds);
 	fprintf(iostream, "Status: %d\n", p->status);
-    return p;
+  return p;
 }
    
 /*******************************************************

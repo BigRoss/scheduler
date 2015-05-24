@@ -77,13 +77,12 @@ int main (int argc, char *argv[]) {
     PcbPtr userQueue = NULL;      // User Queue
     int timer = 0;                // dispatcher timer 
     //Make the MabPtr for the full memory
-    MabPtr memory = NULL;
+    MabPtr memory = (MabPtr) malloc(sizeof(Mab));
     memory->offset = 0;
     memory->size = availMem;
     memory->allocated = 0;
     memory->next = NULL;
     memory->prev = NULL;
-
 //  0. Parse command line
 
     if (argc == 2) inputfile = argv[1];
@@ -126,13 +125,13 @@ int main (int argc, char *argv[]) {
             break;
         }
     }
+
 //  3. Start dispatcher timer;
 //     (already set to zero above)
     
-
 // 4.     While there's anything in any of the queues or there is a currently running process:
     while(inputqueue != NULL || rrQueue != NULL || currentprocess != NULL || fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL || userQueue != NULL){
-        //printf("Timer: %d\n", timer);
+        printf("Timer: %d\n", timer);
         //i.Unload pending processes from the input queue: While (head-of-input-queue.arrival-time <= dispatcher timer)
         
     	while(inputqueue!= NULL && inputqueue->arrivaltime <= timer){
@@ -142,12 +141,13 @@ int main (int argc, char *argv[]) {
         
         //  While (head-of-user-job-queue.mbytes can be allocated)
         while(userQueue!= NULL && userQueue->mbytes <= availMem){
-            //dequeue process from user job queue, allocate memory to the process and enqueue on highest priority feedback queue 
-            //(assigning it the appropriate priority);
-            userQueue->priority = 1;
-            userQueue->memoryblock = memSplit(memory, userQueue->mbytes);
-            memory = memory->next;
-            fbQueue1 = enqPcb(fbQueue1, deqPcb(&userQueue));
+            //dequeue process from user job queue 
+            PcbPtr allocMem = deqPcb(&userQueue);
+            //allocate memory to the process and enqueue on highest priority feedback queue (assigning it the appropriate priority);
+            allocMem->priority = 1;
+            MabPtr freeMem = memChk(memory, allocMem->mbytes); //Check if there is space for allocation
+            allocMem->memoryblock = memAlloc(freeMem, allocMem->mbytes); //Allocate memory
+            fbQueue1 = enqPcb(fbQueue1, allocMem);
         }
 
         // ii.If a process is currently running:
@@ -160,6 +160,7 @@ int main (int argc, char *argv[]) {
             if(currentprocess->remainingcputime <= 0){
                 //printf("terminate currentprocess as time == 0\n");
                 //A. Send SIGINT to the process to terminate it;
+                printf("Kill process: %d\n", currentprocess->pid);
                 terminatePcb(currentprocess);
                 //B.    Free memory allocated to the process;
                 memFree(currentprocess->memoryblock);
@@ -191,26 +192,22 @@ int main (int argc, char *argv[]) {
     	
         // iii. If no process currently running && RR queue is not empty:
         if(currentprocess == NULL && (fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL)){
-            //printf("dequeue and start from rrQueue\n");
+
         	PcbPtr newPcb = NULL;
             //Dequeue a process from the highest priority feedback queue that is not empty
             if(fbQueue1 != NULL){
-            	printf("Starting from queue1\n");
             	newPcb = deqPcb(&fbQueue1);
             }
             else if(fbQueue2 != NULL){
-            	printf("Starting from queue2\n");
             	newPcb = deqPcb(&fbQueue2);
             }
             else if(fbQueue3 != NULL){
-            	printf("Starting from queue3\n");
             	newPcb = deqPcb(&fbQueue3);
             }
             currentprocess = startPcb(newPcb);
         }  
         //     iii. sleep for one second;
         sleep(1);
-            
 //      iv. Increment dispatcher timer;
 
         timer = timer + QUANTUM;

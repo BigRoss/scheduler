@@ -96,16 +96,22 @@ int memChkMax(int size)
  *******************************************************/
 MabPtr memAlloc(MabPtr arena, int size)
 {
-  while(arena){
-    if(arena->size > size){
-      //Split the memory and allocate:
-      arena->allocated = 1;
-    }
-    else if(arena->size == size){
-      arena->allocated = 1;
-      //Just allocate, don't have to split memory
-    }
-    arena = arena->next;
+  if(arena == NULL){
+    return NULL;
+  }
+
+  if(arena->size > size){
+    //Split the memory and allocate:
+
+    arena = memSplit(arena, size); //Split the memory;
+    arena->allocated = 1;
+    arena->next->allocated = 0;
+    return arena;
+  }
+  else if(arena->size == size){
+    //Just allocate, don't have to split memory
+    arena->allocated = 1;
+    return arena;
   }
   return NULL; //Failure to allocate, return null
 
@@ -137,11 +143,11 @@ MabPtr memMerge(MabPtr m)
   if(m->next == NULL){
     return NULL;  
   }
-  else if(m->next->allocated == 0){
+  else if(m->next->allocated == 1){
     return NULL;
   }
   else{
-
+    printf("Merge\n");
     // Set the size of block B to mem_size_B + mem_size_C.
     MabPtr mabC = m->next;
     m->size = m->size + mabC->size;
@@ -149,25 +155,25 @@ MabPtr memMerge(MabPtr m)
     m->next = mabC->next;
     // If there exists an adjacent memory block D to the right of block C:
     // Set the "prev" pointer for block D to the address of block B.
-    if(mabC->next){
-      mabC->next->prev = m;
+    MabPtr mabD = mabC->next;
+    if(mabD != NULL){
+      mabD->prev = m;
     }
     //Free memC
     free(mabC);
   }
-  MabPtr z = m;
+  MabPtr mabZ = m;
 //   If there exists an adjacent memory block A to the left of block B:
-  if(m->prev){
-    z = memMerge(m->prev);
+  if(m->prev != NULL && m->prev->allocated == 0){
+    mabZ = memMerge(m->prev);
   }
   else{
-    z = m;
+    mabZ = m;
   }
-  if(z->next){
-    z = memMerge(z);
+  if(mabZ->next != NULL && mabZ->next->allocated == 0){
+    mabZ = memMerge(mabZ);
   }
-
-  return z;
+  return mabZ;
 
 }
 
@@ -179,18 +185,25 @@ MabPtr memMerge(MabPtr m)
  *******************************************************/
 MabPtr memSplit(MabPtr m, int size)
 {
+  int alloc = m->allocated;
   if(m && m->size >= size){
-    int newSize = m->size - size;
-    m->size = size;
     MabPtr mabC;
     if((mabC = (MabPtr) malloc(sizeof(Mab)))){
-      m->next = mabC;
-      m->next->prev = mabC;
-      //MabC is the memory block we are allocating memory to
+
+      int newSize = m->size - size;
+      mabC->offset = m->offset + size;
       mabC->prev = m;
       mabC->next = m->next;
-      mabC->allocated = 0;
       mabC->size = newSize;
+      mabC->allocated = alloc;
+
+      m->size = size;
+      m->allocated = alloc;
+      if(m->next != NULL){
+        m->next->prev = mabC;
+      }
+      m->next = mabC;
+
       return m;
     }
     perror("error allocating memory for new Mab");
