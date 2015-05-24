@@ -85,7 +85,7 @@ MabPtr memChk(MabPtr arena, int size)
  *******************************************************/
 int memChkMax(int size)
 {
-    ; // FILL THIS IN
+    return TRUE;
 }      
 
 /*******************************************************
@@ -97,10 +97,17 @@ int memChkMax(int size)
 MabPtr memAlloc(MabPtr arena, int size)
 {
   while(arena){
-    if(arena->size >= size){
+    if(arena->size > size){
+      //Split the memory and allocate:
       arena->allocated = 1;
     }
+    else if(arena->size == size){
+      arena->allocated = 1;
+      //Just allocate, don't have to split memory
+    }
+    arena = arena->next;
   }
+  return NULL; //Failure to allocate, return null
 
 }
 
@@ -114,7 +121,9 @@ MabPtr memFree(MabPtr m)
 {
     if(m){
       m->allocated = 0;
+      m = memMerge(m);
     }
+    return m;
 }
       
 /*******************************************************
@@ -132,8 +141,9 @@ MabPtr memMerge(MabPtr m)
     return NULL;
   }
   else{
+
     // Set the size of block B to mem_size_B + mem_size_C.
-    mabC = mem->next;
+    MabPtr mabC = m->next;
     m->size = m->size + mabC->size;
     // Copy the "next" pointer for block C to the "next" pointer for block B
     m->next = mabC->next;
@@ -169,15 +179,26 @@ MabPtr memMerge(MabPtr m)
  *******************************************************/
 MabPtr memSplit(MabPtr m, int size)
 {
-    if(m && m->size >= size){
-      int newSize = m->size - size;
-      m->size = size;
-      MabPtr nextMab;
-      nextMab->prev = m;
-      nextMab->next = m->next;
-      nextMab->allocated = 0;
-      nextMab->size = newSize;
+  if(m && m->size >= size){
+    int newSize = m->size - size;
+    m->size = size;
+    MabPtr mabC;
+    if((mabC = (MabPtr) malloc(sizeof(Mab)))){
+      m->next = mabC;
+      m->next->prev = mabC;
+      //MabC is the memory block we are allocating memory to
+      mabC->prev = m;
+      mabC->next = m->next;
+      mabC->allocated = 0;
+      mabC->size = newSize;
+      return m;
     }
+    perror("error allocating memory for new Mab");
+    return NULL;
+  }
+  else{
+    return NULL;
+  }
 }
 
 /*******************************************************

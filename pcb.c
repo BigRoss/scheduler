@@ -157,7 +157,6 @@ void printPcbHdr(FILE * iostream) {
  ******************************************************/
 PcbPtr createnullPcb() {
     PcbPtr newprocessPtr;
-      
     if ((newprocessPtr = (PcbPtr) malloc (sizeof(Pcb)))) {
         newprocessPtr->pid = 0;
         newprocessPtr->args[0] = DEFAULT_PROCESS;
@@ -166,7 +165,7 @@ PcbPtr createnullPcb() {
         newprocessPtr->priority = HIGH_PRIORITY;
         newprocessPtr->remainingcputime = 0;
         newprocessPtr->mbytes = 0;
-//        newprocessPtr->memoryblock = NULL;
+        newprocessPtr->memoryblock = NULL;
         newprocessPtr->req.printers = 0;
         newprocessPtr->req.scanners = 0;
         newprocessPtr->req.modems = 0;
