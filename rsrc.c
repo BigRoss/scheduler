@@ -45,7 +45,10 @@
  *******************************************************/
 int rsrcChk(RsrcPtr available, Rsrc claim)
 {
-    ; // FILL THIS IN
+	if(available->printers >= claim.printers && available->scanners >= claim.scanners && available->modems >= claim.modems && available->cds >= claim.cds){
+		return TRUE;
+	}
+	return FALSE;
 }
     
 /*******************************************************
@@ -57,7 +60,7 @@ int rsrcChk(RsrcPtr available, Rsrc claim)
  *******************************************************/
 int rsrcChkMax(Rsrc claim)
 {
-    ; // FILL THIS IN
+    return FALSE;
 }
     
 /*******************************************************
@@ -69,7 +72,14 @@ int rsrcChkMax(Rsrc claim)
  *******************************************************/
 int rsrcAlloc(RsrcPtr available, Rsrc claim)
 {
-    ; // FILL THIS IN
+  if(rsrcChk(available, claim) == TRUE){
+		available->printers = available->printers - claim.printers;
+		available->scanners = available->scanners - claim.scanners;
+		available->modems = available->modems - claim.modems;
+		available->cds = available->cds - claim.cds;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 /*******************************************************
@@ -80,5 +90,9 @@ int rsrcAlloc(RsrcPtr available, Rsrc claim)
  *******************************************************/
 void rsrcFree(RsrcPtr available, Rsrc claim)
 {
-    ; // FILL THIS IN
+  available->printers = available->printers - claim.printers;
+	available->scanners = available->scanners - claim.scanners;
+	available->modems = available->modems - claim.modems;
+	available->cds = available->cds - claim.cds;
+	return;
 }

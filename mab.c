@@ -126,8 +126,12 @@ MabPtr memAlloc(MabPtr arena, int size)
 MabPtr memFree(MabPtr m)
 {
     if(m){
-      m->allocated = 0;
-      m = memMerge(m);
+	  m->allocated = 0;
+	  m = memMerge(m);
+	  if(m->prev != NULL && m->prev->allocated == 0){
+		m->prev->allocated = 0;
+		m->prev = memMerge(m->prev); //IM A GODDD YEAHHH BRAHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+	  }
     }
     return m;
 }
@@ -141,13 +145,12 @@ MabPtr memFree(MabPtr m)
 MabPtr memMerge(MabPtr m)
 {
   if(m->next == NULL){
-    return NULL;  
+    return m;  
   }
   else if(m->next->allocated == 1){
-    return NULL;
+    return m;
   }
   else{
-    printf("Merge\n");
     // Set the size of block B to mem_size_B + mem_size_C.
     MabPtr mabC = m->next;
     m->size = m->size + mabC->size;
