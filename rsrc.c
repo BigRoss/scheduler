@@ -90,9 +90,9 @@ int rsrcAlloc(RsrcPtr available, Rsrc claim)
  *******************************************************/
 void rsrcFree(RsrcPtr available, Rsrc claim)
 {
-  available->printers = available->printers - claim.printers;
-	available->scanners = available->scanners - claim.scanners;
-	available->modems = available->modems - claim.modems;
-	available->cds = available->cds - claim.cds;
+  available->printers = available->printers + claim.printers;
+	available->scanners = available->scanners + claim.scanners;
+	available->modems = available->modems + claim.modems;
+	available->cds = available->cds + claim.cds;
 	return;
 }
