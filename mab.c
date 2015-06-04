@@ -129,9 +129,9 @@ MabPtr memFree(MabPtr m)
 	  m->allocated = 0;
 	  m = memMerge(m);
 	  if(m->prev != NULL && m->prev->allocated == 0){
-		m->prev->allocated = 0;
-		m->prev = memMerge(m->prev); //IM A GODDD YEAHHH BRAHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-	  }
+  		m->prev->allocated = 0;
+  		m->prev = memMerge(m->prev);
+	   }
     }
     return m;
 }

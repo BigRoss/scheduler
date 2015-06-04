@@ -72,7 +72,7 @@ PcbPtr startPcb (PcbPtr p) {
                 p->pid = getpid();
                 p->status = PCB_RUNNING;
                 printPcbHdr(stdout);            // printout in child to
-                // printPcb(p, stdout);            //  sync with o/p
+                printPcb(p, stdout);            //  sync with o/p
                 fflush(stdout);
                 execvp (p->args[0], p->args); 
                 perror (p->args[0]);
@@ -127,15 +127,29 @@ PcbPtr terminatePcb(PcbPtr p) {
  *    PcbPtr of process
  ******************************************************/
 PcbPtr printPcb(PcbPtr p, FILE * iostream) {
-	fprintf(iostream, "Pid: %d\n", p->pid);
-	for(int i = 0; i < MAXARGS; i++){
-		if(p->args[i] != NULL){
-			fprintf(iostream, "Args[%d]: %s\n", i, p->args[i]);
-		}
-	}
-	fprintf(iostream, "Arrival time: %d\nPriority: %d\nRemaining CPU Time: %d\nMegabytes: %d\n", p->arrivaltime, p->priority, p->remainingcputime, p->mbytes);
-	fprintf(iostream, "Req Printer: %d\nReq Scanner: %d\nReq MOdems: %d\nReq CD's: %d\n", p->req.printers, p->req.scanners, p->req.modems, p->req.cds);
-	fprintf(iostream, "Status: %d\n", p->status);
+  char* status;
+  switch(p->status){
+    case 0:
+      status = "UNINITIALIZED";
+      break;
+    case 1:
+      status = "INITIALIZED";
+      break;
+    case 2:
+      status = "READY";
+      break;
+    case 3:
+      status = "RUNNING";
+      break;
+    case 4:
+      status = "SUSPENDED";
+      break;
+    case 5: 
+      status = "TERMINATED";
+      break;
+  }
+	fprintf(iostream, "%-6d %-6d %-5d %-4d %-6d %-6d %-4d %-4d %-5d %-4d %-13s\n", p->pid, p->arrivaltime, p->priority, p->remainingcputime, 
+    (p->memoryblock)->offset, p->mbytes, p->req.printers, p->req.scanners, p->req.modems, p->req.cds, status);
   return p;
 }
    
@@ -145,7 +159,7 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
  *    void
  ******************************************************/  
 void printPcbHdr(FILE * iostream) {  
-    // fprintf(iostream, "printPcbHdr\n");
+    fprintf(iostream, "%-6s %-6s %-5s %-4s %-6s %-6s %-4s %-4s %-5s %-4s %-13s\n", "pid", "arrive", "prior", "cpu", "offset", "Mbytes", "prn", "scn", "modem", "cd", "status" );
 }
        
 /*******************************************************

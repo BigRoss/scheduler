@@ -1,48 +1,11 @@
 /*******************************************************************
-
-OS Eercises - Project 2 - HOST dispatcher - Exercise 7
-
-    hostd
-
-        hostd is fcfs 'dispatcher' that reads in a list of 'jobs' from a file
-        and 'dispatches' them in a first-come-first-served manner.
-
-        time resolution is one second (although this can be changed). 
-
-    usage
-   
-        hostd <dispatch file>
- 
-        where
-            <dispatch file> is list of process parameters as specified 
-                for assignment 2.
-
-    functionality
-
-    1. Initialize dispatcher queue;
-    2. Fill dispatcher queue from dispatch list file;
-    3. Start dispatcher timer;
-    4. While there's anything in the queue or there is a currently running process:
-        i. If a process is currently running;
-            a. Decrement process remainingcputime;
-            b. If times up:
-                A. Send SIGINT to the process to terminate it;
-                B. Free up process structure memory
-       ii. If no process currently running &&
-            dispatcher queue is not empty &&
-            arrivaltime of process at head of queue is <= dispatcher timer:
-            a. Dequeue process and start it (fork & exec)
-            b. Set it as currently running process;
-      iii. sleep for one second;
-       iv. Increment dispatcher timer;
-        v. Go back to 4.
-    5. Exit
+COMP3520 Assignment 2 Dispatcher - Alexander Ling 430391570
 
 ********************************************************************
 
 version: 1.0 (exercise 7)
 date:    December 2003
-author:  Dr Ian G Graham, ian.graham@griffith.edu.au
+Code base from :  Dr Ian G Graham, ian.graham@griffith.edu.au
 
 *******************************************************************/
 
@@ -81,11 +44,18 @@ int main (int argc, char *argv[]) {
     //Make the MabPtr for the full memory
 	Mab memoryBlock;
     MabPtr memory = &memoryBlock;
-    memory->offset = 0;
+    memory->offset = 64; //The starting offset is 64 as we leave the first 64 bits of memory for the RT process
     memory->size = availMem;
     memory->allocated = 0;
     memory->next = NULL;
     memory->prev = NULL;
+    Mab rtMemoryBlock;
+    MabPtr rtMemory = &rtMemoryBlock;
+    rtMemory->offset = 0; //The starting offset is 0 for the real-time memory and it is always allocated 64Mb
+    rtMemory->size = 64;
+    rtMemory->allocated = 64;
+    rtMemory->next = NULL;
+    rtMemory->prev = NULL;
 
     //Create a rsrc ptr to show the available resources
 	Rsrc resources;
@@ -147,8 +117,9 @@ int main (int argc, char *argv[]) {
     	while(inputqueue!= NULL && inputqueue->arrivaltime <= timer){
         	// Unload pending processes from the input queue and enqueue onto either realtime queue or user job queue:
             if(inputqueue->priority == 0){
-                //Put on realtime queue
-                rtQueue = enqPcb(userQueue, deqPcb(&inputqueue));
+                //Put on realtime queue after assigning it the memory block specially for real-time processes
+                inputqueue->memoryblock = rtMemory;
+                rtQueue = enqPcb(rtQueue, deqPcb(&inputqueue));
             }
             else{
                 //Otherwise put it on the user job queue
@@ -183,7 +154,6 @@ int main (int argc, char *argv[]) {
     	if(currentRTprocess != NULL){
 			// a. Decrement process remainingcputime;
             currentRTprocess->remainingcputime = currentRTprocess->remainingcputime - QUANTUM;
-
             // b. If times up:
             if(currentRTprocess->remainingcputime <= 0){
                 //A. Send SIGINT to the process to terminate it;
@@ -232,11 +202,12 @@ int main (int argc, char *argv[]) {
         }
 
         // iv. If no process currently running && real time queue and feedback queue are not all empty: 
-        if(currentprocess == NULL && (fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL || rtQueue != NULL)){
-
-            if(rtQueue != NULL && currentRTprocess == NULL){
-            	//If there is a real-time process on the queue then run this
-                currentRTprocess = startPcb(deqPcb(&rtQueue));
+        if((currentprocess == NULL || currentRTprocess == NULL) && (fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL || rtQueue != NULL)){
+            //Start a new real time process if there is one on the queue and there is not one currently running
+            if(rtQueue != NULL){
+                if(currentRTprocess == NULL){
+                    currentRTprocess = startPcb(deqPcb(&rtQueue));    
+                }
             }
             //Else run the normal processes, starting from teh highest priority
             else if(fbQueue1 != NULL){
