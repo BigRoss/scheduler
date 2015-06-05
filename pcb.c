@@ -49,7 +49,7 @@
 
    version: 1.0 (exercise 7)
    date:    December 2003
-   author:  Dr Ian G Graham, ian.graham@griffith.edu.au
+   Code base by:  Dr Ian G Graham, ian.graham@griffith.edu.au
 
  *******************************************************************/
 
