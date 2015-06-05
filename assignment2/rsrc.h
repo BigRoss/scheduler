@@ -1,5 +1,8 @@
 #ifndef RSRC_H
 #define RSRC_H
+
+//Alexander Ling 430391570 - Operating Systems Project 2
+
 /*******************************************************************
 
   OS Exercises - Project 2 - HOST dispatcher

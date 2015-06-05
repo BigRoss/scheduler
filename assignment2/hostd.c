@@ -57,7 +57,7 @@ int main (int argc, char *argv[]) {
     rtMemory->next = NULL;
     rtMemory->prev = NULL;
 
-    //Create a rsrc ptr to show the available resources
+    //Create a rsrc and rsrc ptr to show the available resources in our dispatcher
     Rsrc resources;
     RsrcPtr availRes = &resources;
     availRes->printers = 2;
@@ -226,17 +226,15 @@ int main (int argc, char *argv[]) {
             }
         }
 
-        // iv. If no process currently running && real time queue and feedback queue are not all empty: 
-        if((currentprocess == NULL || currentRTprocess == NULL) && (fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL || rtQueue != NULL)){
-
-            //Start a new real time process if there is one on the queue and there is not one currently running
-            if(rtQueue != NULL){
-                if(currentRTprocess == NULL){
-                    currentRTprocess = startPcb(deqPcb(&rtQueue));    
-                }
-            }
-            //Else start the normal processes, starting from the highest priority
-            else if(fbQueue1 != NULL){
+        // iv. Check if there are any RT processes waiting, if there are and there is no current RT process running then we start a new RT process
+        if(currentRTprocess == NULL && rtQueue != NULL){
+            //Dequeue and start:
+            currentRTprocess = startPcb(deqPcb(&rtQueue));  
+        }
+        // v. If no process currently running and feedback queues are not all empty: 
+        else if(currentprocess == NULL && (fbQueue1 != NULL || fbQueue2 != NULL || fbQueue3 != NULL) && currentRTprocess == NULL){
+            //Start the processes in order of priority, check highest priority first and check downwards if there isn't a process on the higher priority queue
+            if(fbQueue1 != NULL){
                 currentprocess = startPcb(deqPcb(&fbQueue1));
             }
             else if(fbQueue2 != NULL){
@@ -247,14 +245,14 @@ int main (int argc, char *argv[]) {
             }
 
         }
-        // v. sleep for one second;
+        // vi. sleep for one second;
         sleep(1);
 
-        // vi. Increment dispatcher timer;
+        // vii. Increment dispatcher timer;
 
         timer = timer + QUANTUM;
             
-        // vii. Go back to 4.                                        
+        // viii. Go back to 4.                                        
     }
     
 // 5.     Exit.

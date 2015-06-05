@@ -1,3 +1,5 @@
+//Alexander Ling 430391570 - Operating Systems Project 2
+
 /*******************************************************************
 
   OS Exercises - Project 2 - HOST dispatcher
@@ -27,7 +29,7 @@
 
   version: 1.0 bis (exercise 11 code template)
   date:    December 2003
-  author:  Dr Ian G Graham, ian.graham@griffith.edu.au
+  Code base by:  Dr Ian G Graham, ian.graham@griffith.edu.au
   history:
      v1.0:     Original for exercises 11 and full project dispatcher
      v1.0 bis: Code template for exercise 11

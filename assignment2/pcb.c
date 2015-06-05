@@ -1,3 +1,12 @@
+//Alexander Ling 430391570 - Operating Systems Project 2
+
+/********************************************************************
+   Code base by:  Dr Ian G Graham, ian.graham@griffith.edu.au
+   version: 1.0 (exercise 7)
+   date:    December 2003
+
+*******************************************************************/
+
 /*******************************************************************
 
   OS Eercises - Project 2 - HOST dispatcher
@@ -44,14 +53,7 @@
       PcbPtr if dequeued,
       NULL if queue was empty
       & sets new head of Q pointer in adrs at 1st arg
-
- ********************************************************************
-
-   version: 1.0 (exercise 7)
-   date:    December 2003
-   Code base by:  Dr Ian G Graham, ian.graham@griffith.edu.au
-
- *******************************************************************/
+*/
 
 #include "pcb.h"
 
